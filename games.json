@@ -1,0 +1,19 @@
+{
+  "games": [
+    {
+      "name": "Metal Gear Solid PW",
+      "path": "C:/Program Files (x86)/Steam/steamapps/common/MGS_PW/launcher/launcher.exe",
+      "icon": "C:/Users/hadri/Desktop/Delta/icon/pw.ico"
+    },
+    {
+      "name": "Metal Gear Solid 4",
+      "path": "C:/Program Files (x86)/Steam/steamapps/common/METAL GEAR SOLID 4/MGS4/mgs4.exe",
+      "icon": "C:/Users/hadri/Desktop/Delta/icon/mgs4.ico"
+    },
+    {
+      "name": "Metal Gear Solid V",
+      "path": "C:/Program Files (x86)/Steam/steamapps/common/MGS_TPP/mgsvtpp.exe",
+      "icon": "C:/Users/hadri/Desktop/Delta/icon/mgsv.ico"
+    }
+  ]
+}
