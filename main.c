@@ -7,10 +7,13 @@
 #include "dashboard.h"
 #include "dashboardGame.h"
 #include "musicPlayer.h"
+#include "detailGame.h"
+#include "jeux.h"
 
 enum Page {
     PAGE_DASHBOARD,
-    PAGE_GAME
+    PAGE_GAME,
+    PAGE_DETAIL
 };
 
 static enum Page currentPage = PAGE_DASHBOARD;
@@ -152,6 +155,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             DashboardInit(hwnd);
             DashboardGameInit(hwnd);
+            DetailInit(hwnd);
             DashboardShow(1);
             currentPage = PAGE_DASHBOARD;
             SettingsInit(hwnd);
@@ -160,6 +164,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_SIZE:
             DashboardResize(hwnd, LOWORD(lParam), HIWORD(lParam));
             DashboardGameResize(hwnd, LOWORD(lParam), HIWORD(lParam));
+            DetailResize(hwnd, LOWORD(lParam), HIWORD(lParam));
             return 0;
 
         case WM_PAINT: {
@@ -184,6 +189,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             DashboardDraw(hdc);
             DashboardGameDraw(hdc);
+            DetailDraw(hdc);
 
             EndPaint(hwnd, &ps);
             return 0;
@@ -193,6 +199,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             if (LOWORD(wParam) >= BTN_MUSIC_PREV && LOWORD(wParam) <= BTN_MUSIC_NEXT) {
                 MusicPlayerHandleCommand(hwnd, wParam);
+                return 0;
+            }
+
+            if (LOWORD(wParam) == BTN_DETAIL_BACK || LOWORD(wParam) == BTN_DETAIL_LAUNCH) {
+                if (LOWORD(wParam) == BTN_DETAIL_BACK) {
+                    DetailHandleCommand(hwnd, wParam);
+                    DashboardGameShow(1);
+                    currentPage = PAGE_GAME;
+                } else {
+                    DetailHandleCommand(hwnd, wParam);
+                }
                 return 0;
             }
 
@@ -239,15 +256,43 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_TIMER:
             if (wParam == TIMER_MUSIC_POS)
                 MusicPlayerOnTimer();
+            if (wParam == 2)
+                DetailOnTick();
             return 0;
 
         case MM_MCINOTIFY:
             MusicPlayerOnNotify(hwnd, wParam, lParam);
             return 0;
 
+        case WM_MOUSEWHEEL:
+            if (currentPage == PAGE_GAME && DashboardGameIsVisible()) {
+                DashboardGameWheel(hwnd, (short)HIWORD(wParam));
+                return 0;
+            }
+            break;
+
+        case WM_LBUTTONDOWN: {
+            int x = (short)LOWORD(lParam);
+            int y = (short)HIWORD(lParam);
+            if (currentPage == PAGE_GAME && DashboardGameIsVisible()) {
+                int idx = DashboardGameIndexAt(x, y);
+                if (idx >= 0) {
+                    int hit = DashboardGameHitTest(hwnd, x, y);
+                    if (hit) {
+                        DashboardGameShow(0);
+                        DetailShow(hwnd, 1, idx);
+                        currentPage = PAGE_DETAIL;
+                    }
+                }
+                return 0;
+            }
+            break;
+        }
+
         case WM_DESTROY:
             MusicPlayerShutdown();
             DashboardGameDestroy();
+            DetailDestroy();
             if (g_bgBitmap) DeleteObject(g_bgBitmap);
             if (g_gdiplusInited) GdiplusShutdown(g_gdiplusToken);
             PostQuitMessage(0);

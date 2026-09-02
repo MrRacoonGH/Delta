@@ -3,85 +3,82 @@
     {
       "name": "Metal Gear Solid PW",
       "path": "C:/Program Files (x86)/Steam/steamapps/common/MGS_PW/launcher/launcher.exe",
-      "icon": "C:/Users/hadri/Desktop/Delta/icon/pw.ico",
-      "playtime": 0
+      "icon": "C:/Users/hadri/Desktop/Delta/icon/pw.ico"
     },
     {
       "name": "Metal Gear Solid 4",
       "path": "C:/Program Files (x86)/Steam/steamapps/common/METAL GEAR SOLID 4/MGS4/mgs4.exe",
-      "icon": "C:/Users/hadri/Desktop/Delta/icon/mgs4.ico",
-      "playtime": 0
+      "icon": "C:/Users/hadri/Desktop/Delta/icon/mgs4.ico"
     },
     {
       "name": "Metal Gear Solid V",
       "path": "C:/Program Files (x86)/Steam/steamapps/common/MGS_TPP/mgsvtpp.exe",
-      "icon": "C:/Users/hadri/Desktop/Delta/icon/mgsv.ico",
-      "playtime": 0
+      "icon": "C:/Users/hadri/Desktop/Delta/icon/mgsv.ico"
     },
     {
       "name": "JDM: Japanese Drift Master",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\JDM\\JDM.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "LEGO® Batman™ 2: DC Super Heroes",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\LEGO Batman 2\\LEGOBatman2.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "TowerFall Ascension",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\TowerFall\\TowerFall.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "Kingsgrave",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Kingsgrave\\Kingsgrave.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "Grand Theft Auto V Legacy",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Grand Theft Auto V\\GTAVLauncher.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "Undertale",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Undertale\\UNDERTALE.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "Resident Evil 2 (1998)",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\4249110_Biohazard2\\4249110_Launcher.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "RPG Maker VX",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\RPG Maker VX\\RPGVX.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "Fallout Shelter",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Fallout Shelter\\FalloutShelter.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "Dead Cells",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Dead Cells\\deadcells.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "PC Building Simulator",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\PC Building Simulator\\PCBS.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "Devil May Cry HD Collection",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Devil May Cry HD Collection\\dmcLauncher.exe",
-      "playtime": 0
+      "icon": ""
     },
     {
       "name": "Game Dev Studio",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Game Dev Studio\\game_dev_studio.exe",
-      "playtime": 0
+      "icon": ""
     }
   ]
 }
