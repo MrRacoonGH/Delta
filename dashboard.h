@@ -18,6 +18,7 @@
 #define BTN_BACKGROUND 2008
 #define BTN_SAVE 2009
 #define BTN_RESET 2010
+#define BTN_MUSIC_PAGE 2011
 
 void DashboardInit(HWND hwnd);
 void DashboardShow(int show);

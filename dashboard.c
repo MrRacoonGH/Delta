@@ -11,6 +11,7 @@ static HWND btnExit;
 static HWND btnBackground;
 static HWND btnSave;
 static HWND btnReset;
+static HWND btnMusic;
 
 static HWND btnRes800;
 static HWND btnRes1280;
@@ -46,10 +47,19 @@ void DashboardInit(HWND hwnd) {
         NULL
     );
 
+    btnMusic = CreateWindow(
+        "BUTTON", "Musique",
+        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+        20, 120, 200, 30,
+        hwnd, (HMENU)BTN_MUSIC_PAGE,
+        (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+        NULL
+    );
+
     btnExit = CreateWindow(
         "BUTTON", "Fermer l'application",
         WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-        20, 120, 200, 30,
+        20, 170, 200, 30,
         hwnd, (HMENU)BTN_EXIT_APP,
         (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
         NULL
@@ -58,7 +68,7 @@ void DashboardInit(HWND hwnd) {
     btnBackground = CreateWindow(
         "BUTTON", "Background",
         WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-        20, 170, 200, 30,
+        20, 220, 200, 30,
         hwnd, (HMENU)BTN_BACKGROUND,
         (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
         NULL
@@ -67,7 +77,7 @@ void DashboardInit(HWND hwnd) {
     btnSave = CreateWindow(
         "BUTTON", "Sauvegarder",
         WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-        20, 220, 200, 30,
+        20, 270, 200, 30,
         hwnd, (HMENU)BTN_SAVE,
         (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
         NULL
@@ -76,7 +86,7 @@ void DashboardInit(HWND hwnd) {
     btnReset = CreateWindow(
         "BUTTON", "Reset",
         WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-        20, 270, 200, 30,
+        20, 320, 200, 30,
         hwnd, (HMENU)BTN_RESET,
         (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
         NULL
@@ -153,13 +163,14 @@ void DashboardInit(HWND hwnd) {
 void DashboardShow(int show) {
     ShowWindow(btnResolution, show ? SW_SHOW : SW_HIDE);
     ShowWindow(btnGames, show ? SW_SHOW : SW_HIDE);
+    ShowWindow(btnMusic, show ? SW_SHOW : SW_HIDE);
     ShowWindow(btnExit, show ? SW_SHOW : SW_HIDE);
     ShowWindow(btnBackground, show ? SW_SHOW : SW_HIDE);
     ShowWindow(btnSave, show ? SW_SHOW : SW_HIDE);
     ShowWindow(btnReset, show ? SW_SHOW : SW_HIDE);
 
-    // Le lecteur de musique n'est visible que sur le dashboard
-    MusicPlayerShow(show);
+    /* Mini-player controls are hidden on dashboard — only visible on music page */
+    MusicPlayerShow(0);
 
     // Les boutons de résolution et de mode sont cachés par défaut
     ShowWindow(btnRes800, SW_HIDE);
@@ -179,10 +190,11 @@ void DashboardShow(int show) {
 void DashboardResize(HWND hwnd, int width, int height) {
     SetWindowPos(btnResolution, NULL, 20, 20, 200, 30, SWP_NOZORDER);
     SetWindowPos(btnGames, NULL, 20, 70, 200, 30, SWP_NOZORDER);
-    SetWindowPos(btnExit, NULL, 20, 120, 200, 30, SWP_NOZORDER);
-    SetWindowPos(btnBackground, NULL, 20, 170, 200, 30, SWP_NOZORDER);
-    SetWindowPos(btnSave, NULL, 20, 220, 200, 30, SWP_NOZORDER);
-    SetWindowPos(btnReset, NULL, 20, 270, 200, 30, SWP_NOZORDER);
+    SetWindowPos(btnMusic, NULL, 20, 120, 200, 30, SWP_NOZORDER);
+    SetWindowPos(btnExit, NULL, 20, 170, 200, 30, SWP_NOZORDER);
+    SetWindowPos(btnBackground, NULL, 20, 220, 200, 30, SWP_NOZORDER);
+    SetWindowPos(btnSave, NULL, 20, 270, 200, 30, SWP_NOZORDER);
+    SetWindowPos(btnReset, NULL, 20, 320, 200, 30, SWP_NOZORDER);
 
     SetWindowPos(btnRes800, NULL, 250, 20, 120, 30, SWP_NOZORDER);
     SetWindowPos(btnRes1280, NULL, 250, 60, 120, 30, SWP_NOZORDER);

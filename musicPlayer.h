@@ -17,4 +17,12 @@ void MusicPlayerOnTimer(void);
 void MusicPlayerOnNotify(HWND hwnd, WPARAM wParam, LPARAM lParam);
 void MusicPlayerShutdown(void);
 
+int  MusicPlayerGetTrackCount(void);
+const char *MusicPlayerGetTrackTitle(int index);
+const char *MusicPlayerGetTrackArtist(int index);
+int  MusicPlayerGetCurrentTrack(void);
+int  MusicPlayerIsPlaying(void);
+void MusicPlayerPlayTrack(int index);
+const char *MusicPlayerGetTrackPath(int index);
+
 #endif

@@ -417,3 +417,28 @@ void MusicPlayerShutdown(void) {
     KillTimer(hwndParent, TIMER_MUSIC_POS);
     MFShutdown();
 }
+
+int MusicPlayerGetTrackCount(void) { return trackCount; }
+
+const char *MusicPlayerGetTrackTitle(int index) {
+    if (index >= 0 && index < trackCount) return trackTitles[index];
+    return "---";
+}
+
+const char *MusicPlayerGetTrackArtist(int index) {
+    if (index >= 0 && index < trackCount) return trackArtists[index];
+    return "---";
+}
+
+int MusicPlayerGetCurrentTrack(void) { return currentTrack; }
+
+int MusicPlayerIsPlaying(void) { return isPlaying; }
+
+void MusicPlayerPlayTrack(int index) {
+    PlayTrack(index);
+}
+
+const char *MusicPlayerGetTrackPath(int index) {
+    if (index >= 0 && index < trackCount) return trackPaths[index];
+    return NULL;
+}
