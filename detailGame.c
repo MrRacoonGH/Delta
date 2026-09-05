@@ -4,6 +4,7 @@
 #include "dashboardGame.h"
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <gdiplus.h>
 
 static HWND g_hwnd = NULL;
@@ -183,9 +184,24 @@ void DetailDraw(HDC hdc) {
     PlaytimeText(pt, sizeof(pt));
     DrawText(hdc, pt, -1, &ptRc, DT_LEFT | DT_SINGLELINE);
 
+    /* last played (from Steam) */
+    SetTextColor(hdc, RGB(200, 200, 200));
+    int lp = GameGetLastPlayed(g_gameIndex);
+    if (lp > 0) {
+        time_t t = (time_t)lp;
+        struct tm *tm = localtime(&t);
+        char datestr[32];
+        if (tm) strftime(datestr, sizeof(datestr), "%d/%m/%Y", tm);
+        else strcpy(datestr, "inconnue");
+        char lbl[128];
+        snprintf(lbl, sizeof(lbl), "Derniere partie : %s", datestr);
+        RECT lpRc = {40, 270, g_clientW - 40, 296};
+        DrawText(hdc, lbl, -1, &lpRc, DT_LEFT | DT_SINGLELINE);
+    }
+
     /* path */
     SetTextColor(hdc, RGB(200, 200, 200));
-    RECT pathRc = {40, 280, g_clientW - 40, 310};
+    RECT pathRc = {40, 300, g_clientW - 40, 330};
     char lb[300];
     snprintf(lb, sizeof(lb), "Chemin : %s", GameGetPath(g_gameIndex));
     DrawText(hdc, lb, -1, &pathRc, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);

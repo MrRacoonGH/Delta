@@ -150,6 +150,15 @@ void LoadGamesFromJSON()
             if (pVal) games[gameCount].playtime = atoi(pVal + 1);
         }
 
+        // LASTPLAYED (optional, unix timestamp from Steam)
+        games[gameCount].lastplayed = 0;
+        char *lastStart = strstr(end, "\"lastplayed\"");
+        if (lastStart && lastStart < buffer + read)
+        {
+            char *lv = strchr(lastStart, ':');
+            if (lv) games[gameCount].lastplayed = atoi(lv + 1);
+        }
+
         gameCount++;
     }
 
@@ -215,6 +224,11 @@ void GameSetPlaytime(int index, int minutes) {
     if (index >= 0 && index < gameCount) games[index].playtime = minutes;
 }
 
+int GameGetLastPlayed(int index) {
+    if (index >= 0 && index < gameCount) return games[index].lastplayed;
+    return 0;
+}
+
 void FormatPlaytime(int minutes, char *out, size_t outSize) {
     if (minutes >= 60) {
         int h = minutes / 60;
@@ -250,7 +264,8 @@ void SaveGamesJson(void) {
         fprintf(f, "      \"path\": \"%s\",\n", ep);
         if (games[i].icon[0]) fprintf(f, "      \"icon\": \"%s\",\n", ei);
         if (games[i].banner[0]) fprintf(f, "      \"banner\": \"%s\",\n", eb);
-        fprintf(f, "      \"playtime\": %d\n", games[i].playtime);
+        fprintf(f, "      \"playtime\": %d,\n", games[i].playtime);
+        fprintf(f, "      \"lastplayed\": %d\n", games[i].lastplayed);
         fprintf(f, "    }");
     }
     fprintf(f, "\n  ]\n}\n");

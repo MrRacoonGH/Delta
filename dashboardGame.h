@@ -18,6 +18,7 @@ typedef struct {
     char icon[260];
     char banner[260];
     int  playtime;   /* minutes */
+    int  lastplayed; /* unix timestamp (Steam) */
 } GameEntry;
 
 void DashboardGameInit(HWND hwnd);
@@ -38,6 +39,7 @@ const char *GameGetBanner(int index);
 const char *GameGetIcon(int index);
 int  GameGetPlaytime(int index);
 void GameSetPlaytime(int index, int minutes);
+int  GameGetLastPlayed(int index);
 void DashboardGameDestroy(void);
 
 #endif

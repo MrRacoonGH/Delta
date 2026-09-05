@@ -9,11 +9,14 @@
 #include "musicPlayer.h"
 #include "detailGame.h"
 #include "jeux.h"
+#include "musicPage.h"
+#include "playlist.h"
 
 enum Page {
     PAGE_DASHBOARD,
     PAGE_GAME,
-    PAGE_DETAIL
+    PAGE_DETAIL,
+    PAGE_MUSIC
 };
 
 static enum Page currentPage = PAGE_DASHBOARD;
@@ -27,6 +30,10 @@ static char g_bgPath[1024] = "";
 static const char *CONFIG_FILE = "deltagame.cfg";
 
 static void LoadBackgroundImage(HWND hwnd, const char *path);
+
+int BackgroundIsDark(void) {
+    return g_bgDark;
+}
 
 static void GetAppDir(char *out, int outSize) {
     GetModuleFileName(NULL, out, outSize);
@@ -56,6 +63,11 @@ void SettingsReset(HWND hwnd) {
     char path[1100];
     snprintf(path, sizeof(path), "%s%s", dir, CONFIG_FILE);
     remove(path);
+
+    /* Reset also removes all playlists */
+    MusicPageCancelNewPl();
+    PlaylistClearAll();
+    MusicPageResetPlaylists();
 
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -156,7 +168,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DashboardInit(hwnd);
             DashboardGameInit(hwnd);
             DetailInit(hwnd);
+            MusicPageInit(hwnd);
             DashboardShow(1);
+            DashboardStatsRefresh();
             currentPage = PAGE_DASHBOARD;
             SettingsInit(hwnd);
             return 0;
@@ -188,8 +202,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
 
             DashboardDraw(hdc);
+            DashboardStatsDraw(hdc, rc.right, rc.bottom);
             DashboardGameDraw(hdc);
             DetailDraw(hdc);
+            MusicPageDraw(hdc);
 
             EndPaint(hwnd, &ps);
             return 0;
@@ -199,6 +215,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             if (LOWORD(wParam) >= BTN_MUSIC_PREV && LOWORD(wParam) <= BTN_MUSIC_NEXT) {
                 MusicPlayerHandleCommand(hwnd, wParam);
+                return 0;
+            }
+
+            if (LOWORD(wParam) == BTN_MUSIC_PAGE) {
+                DashboardShow(0);
+                MusicPageShow(1);
+                MusicPlayerShow(1);
+                currentPage = PAGE_MUSIC;
                 return 0;
             }
 
@@ -239,11 +263,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 DashboardHandleCommand(hwnd, wParam);
             }
+            else if (currentPage == PAGE_MUSIC) {
+                if (MusicPageHandleCommand(hwnd, wParam) == MUSIC_RET_BACK) {
+                    MusicPlayerSaveCounts();
+                    DashboardShow(1);
+                    DashboardStatsRefresh();
+                    currentPage = PAGE_DASHBOARD;
+                }
+            }
             else {
 
                 if (LOWORD(wParam) == BTN_BACK) {
                     DashboardGameShow(0);
                     DashboardShow(1);
+                    DashboardStatsRefresh();
                     currentPage = PAGE_DASHBOARD;
                     return 0;
                 }
@@ -254,8 +287,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
 
         case WM_TIMER:
-            if (wParam == TIMER_MUSIC_POS)
+            if (wParam == TIMER_MUSIC_POS) {
                 MusicPlayerOnTimer();
+                MusicPageOnTimer();
+            }
             if (wParam == 2)
                 DetailOnTick();
             return 0;
@@ -269,11 +304,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 DashboardGameWheel(hwnd, (short)HIWORD(wParam));
                 return 0;
             }
+            if (currentPage == PAGE_MUSIC) {
+                MusicPageOnMouseWheel((short)HIWORD(wParam));
+                return 0;
+            }
+            break;
+
+        case WM_MOUSEMOVE:
+            if (currentPage == PAGE_MUSIC) {
+                MusicPageOnMouseMove((short)LOWORD(lParam), (short)HIWORD(lParam));
+                return 0;
+            }
+            break;
+
+        case WM_KEYDOWN:
+            if (currentPage == PAGE_MUSIC && MusicPageHandleKey(wParam)) {
+                return 0;
+            }
             break;
 
         case WM_LBUTTONDOWN: {
             int x = (short)LOWORD(lParam);
             int y = (short)HIWORD(lParam);
+            if (currentPage == PAGE_MUSIC) {
+                MusicPageOnLButtonDown(x, y);
+                return 0;
+            }
             if (currentPage == PAGE_GAME && DashboardGameIsVisible()) {
                 int idx = DashboardGameIndexAt(x, y);
                 if (idx >= 0) {
@@ -284,6 +340,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         currentPage = PAGE_DETAIL;
                     }
                 }
+                return 0;
+            }
+            break;
+        }
+
+        case WM_RBUTTONDOWN: {
+            if (currentPage == PAGE_MUSIC) {
+                int x = (short)LOWORD(lParam);
+                int y = (short)HIWORD(lParam);
+                MusicPageOnRButtonDown(x, y);
                 return 0;
             }
             break;
