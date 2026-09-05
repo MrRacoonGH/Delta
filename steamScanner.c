@@ -356,9 +356,211 @@ static void NormalizePath(const char *in, char *out) {
     out[oi] = '\0';
 }
 
+/* ------------------ Steam playtime (localconfig.vdf) ------------------ */
+
+#define VDF_MAX_NODES 60000
+#define STEAM_MAX_PLAYTIMES 4096
+
+typedef struct {
+    char key[48];
+    char value[64];
+    int isValue;
+    int firstChild;
+    int next;       /* next sibling index, -1 if none */
+} VdfNode;
+
+static VdfNode g_vdfNodes[VDF_MAX_NODES];
+static int g_vdfCount = 0;
+
+static char g_playAppIds[STEAM_MAX_PLAYTIMES][16];
+static long g_playMins[STEAM_MAX_PLAYTIMES];
+static long long g_playLast[STEAM_MAX_PLAYTIMES];
+static int g_playCount = 0;
+
+static int VdfNextToken(const char **p, char *out, size_t outSize) {
+    const char *s = *p;
+    while (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n') s++;
+    if (*s != '"') return 0;
+    s++;
+    size_t o = 0;
+    while (*s && *s != '"') {
+        if (*s == '\\' && s[1] == '"') { s += 2; continue; }
+        if (o < outSize - 1) out[o++] = *s;
+        s++;
+    }
+    out[o] = '\0';
+    if (*s != '"') return 0;
+    *p = s + 1;
+    return 1;
+}
+
+static int VdfParseNode(const char **p) {
+    if (g_vdfCount >= VDF_MAX_NODES) return -1;
+    char key[48], val[64];
+    if (!VdfNextToken(p, key, sizeof(key))) return -1;
+
+    const char *s = *p;
+    while (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n') s++;
+
+    int idx = g_vdfCount++;
+    VdfNode *n = &g_vdfNodes[idx];
+    memset(n, 0, sizeof(*n));
+    strncpy(n->key, key, sizeof(n->key) - 1);
+    n->firstChild = -1;
+    n->next = -1;
+
+    if (*s == '{') {
+        *p = s + 1;
+        int last = -1;
+        for (;;) {
+            const char *t = *p;
+            while (*t == ' ' || *t == '\t' || *t == '\r' || *t == '\n') t++;
+            if (*t == '}' || !*t) { if (*t == '}') *p = t + 1; break; }
+            int c = VdfParseNode(p);
+            if (c < 0) break;
+            if (n->firstChild == -1) n->firstChild = c;
+            if (last >= 0) g_vdfNodes[last].next = c;
+            last = c;
+        }
+    } else {
+        if (!VdfNextToken(p, val, sizeof(val))) return -1;
+        strncpy(n->value, val, sizeof(n->value) - 1);
+        n->isValue = 1;
+    }
+    return idx;
+}
+
+static int VdfChild(const VdfNode *node, const char *key) {
+    int c = node->firstChild;
+    while (c >= 0) {
+        if (strcmp(g_vdfNodes[c].key, key) == 0) return c;
+        c = g_vdfNodes[c].next;
+    }
+    return -1;
+}
+
+/* Read Steam per-app playtime ("apps" section of localconfig.vdf).
+   Uses the most recently modified user profile. Fills g_play* tables. */
+static void SteamLoadPlaytimes(void) {
+    g_playCount = 0;
+
+    char steamDir[STEAM_MAX_PATH] = "";
+    if (!SteamGetInstallDir(steamDir, sizeof(steamDir))) return;
+
+    char search[STEAM_MAX_PATH];
+    snprintf(search, sizeof(search), "%s\\userdata\\*", steamDir);
+
+    WIN32_FIND_DATA fd;
+    HANDLE h = FindFirstFile(search, &fd);
+    if (h == INVALID_HANDLE_VALUE) return;
+
+    FILETIME bestFt = {0, 0};
+    char bestPath[STEAM_MAX_PATH] = "";
+    do {
+        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) continue;
+        if (strcmp(fd.cFileName, ".") == 0 || strcmp(fd.cFileName, "..") == 0) continue;
+        char lcf[STEAM_MAX_PATH];
+        snprintf(lcf, sizeof(lcf), "%s\\userdata\\%s\\config\\localconfig.vdf",
+                 steamDir, fd.cFileName);
+        if (GetFileAttributesA(lcf) == INVALID_FILE_ATTRIBUTES) continue;
+        if (CompareFileTime(&fd.ftLastWriteTime, &bestFt) >= 0) {
+            bestFt = fd.ftLastWriteTime;
+            strncpy(bestPath, lcf, STEAM_MAX_PATH - 1);
+            bestPath[STEAM_MAX_PATH - 1] = '\0';
+        }
+    } while (FindNextFile(h, &fd));
+    FindClose(h);
+
+    if (!bestPath[0]) return;
+
+    FILE *f = fopen(bestPath, "rb");
+    if (!f) return;
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (sz <= 0) { fclose(f); return; }
+
+    char *buf = (char*)malloc((size_t)sz + 1);
+    if (!buf) { fclose(f); return; }
+    size_t rd = fread(buf, 1, (size_t)sz, f);
+    buf[rd] = '\0';
+    fclose(f);
+    if (rd < 4) { free(buf); return; }
+
+    const char *p = buf;
+    if ((unsigned char)p[0] == 0xEF && (unsigned char)p[1] == 0xBB && (unsigned char)p[2] == 0xBF)
+        p += 3;
+
+    g_vdfCount = 0;
+    int root = VdfParseNode(&p);
+    if (root >= 0) {
+        int soft = VdfChild(&g_vdfNodes[root], "Software");
+        if (soft >= 0) {
+            int valve = VdfChild(&g_vdfNodes[soft], "Valve");
+            if (valve >= 0) {
+                int steam = VdfChild(&g_vdfNodes[valve], "Steam");
+                if (steam >= 0) {
+                    int apps = VdfChild(&g_vdfNodes[steam], "apps");
+                    if (apps >= 0) {
+                        const VdfNode *appsNode = &g_vdfNodes[apps];
+                        int c = appsNode->firstChild;
+                        while (c >= 0) {
+                            const VdfNode *app = &g_vdfNodes[c];
+                            int play = VdfChild(app, "playtime");
+                            if (play >= 0 && g_vdfNodes[play].isValue) {
+                                if (!app->key[0] || g_playCount >= STEAM_MAX_PLAYTIMES) break;
+                                strncpy(g_playAppIds[g_playCount], app->key,
+                                        sizeof(g_playAppIds[g_playCount]) - 1);
+                                g_playAppIds[g_playCount][sizeof(g_playAppIds[g_playCount]) - 1] = '\0';
+                                g_playMins[g_playCount] = atol(g_vdfNodes[play].value);
+                                int last = VdfChild(app, "LastPlayed");
+                                g_playLast[g_playCount] = (last >= 0 && g_vdfNodes[last].isValue)
+                                                          ? atoll(g_vdfNodes[last].value) : 0;
+                                g_playCount++;
+                            }
+                            c = g_vdfNodes[c].next;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    free(buf);
+}
+
+/* Public: Steam playtime in minutes for an appid, -1 if unknown */
+long SteamGetPlaytime(const char *appid) {
+    if (!appid) return -1;
+    for (int i = 0; i < g_playCount; i++)
+        if (strcmp(g_playAppIds[i], appid) == 0) return g_playMins[i];
+    return -1;
+}
+
+/* Public: Steam last-played unix timestamp for an appid, 0 if unknown */
+long long SteamGetLastPlayed(const char *appid) {
+    if (!appid) return 0;
+    for (int i = 0; i < g_playCount; i++)
+        if (strcmp(g_playAppIds[i], appid) == 0) return g_playLast[i];
+    return 0;
+}
+
+/* Public: return the Steam appid of a scanned game matching an exe path, "" if none */
+const char *SteamGetAppIdForPath(const char *path) {
+    if (!path) return "";
+    char norm[STEAM_MAX_PATH];
+    NormalizePath(path, norm);
+    for (int i = 0; i < g_steamCount; i++) {
+        char n2[STEAM_MAX_PATH];
+        NormalizePath(g_steamGames[i].path, n2);
+        if (strcmp(norm, n2) == 0) return g_steamGames[i].appid;
+    }
+    return "";
+}
+
 /* Public: merge discovered Steam games into games.json (append, dedupe by exe path).
    Existing entries are preserved. Returns 1 on success. */
 int SteamMergeIntoJson(void) {
+    SteamLoadPlaytimes();
     char appDir[STEAM_MAX_PATH];
     GetModuleFileName(NULL, appDir, sizeof(appDir));
     char *s = strrchr(appDir, '\\');
@@ -458,6 +660,14 @@ int SteamMergeIntoJson(void) {
                 if (pVal) playtime = atol(pVal + 1);
             }
 
+            long lastplayed = 0;
+            char *lastStart = strstr(playStart ? playStart : (iconStart ? iconStart : pathClose),
+                                     "\"lastplayed\"");
+            if (lastStart) {
+                char *lv = strchr(lastStart, ':');
+                if (lv) lastplayed = atol(lv + 1);
+            }
+
             JsonUnescape(path);
             JsonUnescape(icon);
             JsonUnescape(name);
@@ -470,6 +680,15 @@ int SteamMergeIntoJson(void) {
             /* Drop entries whose exe no longer exists on disk (uninstalled) */
             if (!FileExists(path))
                 continue;
+
+            /* Use the playtime recorded by Steam when this is a Steam game */
+            const char *appid = SteamGetAppIdForPath(path);
+            if (appid && appid[0]) {
+                long st = SteamGetPlaytime(appid);
+                if (st >= 0 && st > playtime) playtime = st;
+                long long sl = SteamGetLastPlayed(appid);
+                if (sl > 0) lastplayed = (long)sl;
+            }
 
             if (existingCount < STEAM_MAX_GAMES) {
                 NormalizePath(path, existingPaths[existingCount]);
@@ -487,7 +706,8 @@ int SteamMergeIntoJson(void) {
             fprintf(f, "      \"path\": \"%s\",\n", ep);
             if (icon[0]) fprintf(f, "      \"icon\": \"%s\",\n", ei);
             if (banner[0]) fprintf(f, "      \"banner\": \"%s\",\n", eb);
-            fprintf(f, "      \"playtime\": %ld\n", playtime);
+            fprintf(f, "      \"playtime\": %ld,\n", playtime);
+            fprintf(f, "      \"lastplayed\": %ld\n", lastplayed);
             fprintf(f, "    }");
             wroteAny = 1;
         }
@@ -516,11 +736,22 @@ int SteamMergeIntoJson(void) {
             existingCount++;
         }
 
+        long nt = 0;
+        long nlast = 0;
+        const char *appid = SteamGetAppIdForPath(sp);
+        if (appid && appid[0]) {
+            long st = SteamGetPlaytime(appid);
+            if (st >= 0) nt = st;
+            long long sl = SteamGetLastPlayed(appid);
+            if (sl > 0) nlast = (long)sl;
+        }
+
         if (wroteAny) fprintf(f, ",\n");
         fprintf(f, "    {\n");
         fprintf(f, "      \"name\": \"%s\",\n", ename);
         fprintf(f, "      \"path\": \"%s\",\n", epath);
-        fprintf(f, "      \"playtime\": 0\n");
+        fprintf(f, "      \"playtime\": %ld,\n", nt);
+        fprintf(f, "      \"lastplayed\": %ld\n", nlast);
         fprintf(f, "    }");
         wroteAny = 1;
     }

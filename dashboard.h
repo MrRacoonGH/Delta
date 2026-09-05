@@ -25,6 +25,9 @@ void DashboardShow(int show);
 void DashboardResize(HWND hwnd, int width, int height);
 void DashboardDraw(HDC hdc);
 void DashboardHandleCommand(HWND hwnd, WPARAM wParam);
+void DashboardStatsRefresh(void);
+void DashboardStatsDraw(HDC hdc, int width, int height);
+int  BackgroundIsDark(void);
 
 void SettingsLoad(void);
 void SettingsSave(HWND hwnd);

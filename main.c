@@ -31,6 +31,10 @@ static const char *CONFIG_FILE = "deltagame.cfg";
 
 static void LoadBackgroundImage(HWND hwnd, const char *path);
 
+int BackgroundIsDark(void) {
+    return g_bgDark;
+}
+
 static void GetAppDir(char *out, int outSize) {
     GetModuleFileName(NULL, out, outSize);
     char *s = strrchr(out, '\\');
@@ -166,6 +170,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DetailInit(hwnd);
             MusicPageInit(hwnd);
             DashboardShow(1);
+            DashboardStatsRefresh();
             currentPage = PAGE_DASHBOARD;
             SettingsInit(hwnd);
             return 0;
@@ -197,6 +202,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
 
             DashboardDraw(hdc);
+            DashboardStatsDraw(hdc, rc.right, rc.bottom);
             DashboardGameDraw(hdc);
             DetailDraw(hdc);
             MusicPageDraw(hdc);
@@ -259,7 +265,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             else if (currentPage == PAGE_MUSIC) {
                 if (MusicPageHandleCommand(hwnd, wParam) == MUSIC_RET_BACK) {
+                    MusicPlayerSaveCounts();
                     DashboardShow(1);
+                    DashboardStatsRefresh();
                     currentPage = PAGE_DASHBOARD;
                 }
             }
@@ -268,6 +276,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (LOWORD(wParam) == BTN_BACK) {
                     DashboardGameShow(0);
                     DashboardShow(1);
+                    DashboardStatsRefresh();
                     currentPage = PAGE_DASHBOARD;
                     return 0;
                 }

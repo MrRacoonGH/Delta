@@ -3,6 +3,7 @@
 #include "dashboard.h"
 #include "dashboardGame.h"
 #include "musicPlayer.h"
+#include "statsPanel.h"
 #include <windows.h>
 
 static HWND btnResolution;
@@ -26,6 +27,8 @@ static int displayMode = 0; // 0 = fenêtré, 1 = plein écran (sélection)
 static int lastW = 0;
 static int lastH = 0;
 static int hasResolution = 0;
+
+static int dashboardVisible = 0;
 
 void DashboardInit(HWND hwnd) {
 
@@ -161,6 +164,8 @@ void DashboardInit(HWND hwnd) {
 }
 
 void DashboardShow(int show) {
+    dashboardVisible = show;
+
     ShowWindow(btnResolution, show ? SW_SHOW : SW_HIDE);
     ShowWindow(btnGames, show ? SW_SHOW : SW_HIDE);
     ShowWindow(btnMusic, show ? SW_SHOW : SW_HIDE);
@@ -209,7 +214,16 @@ void DashboardResize(HWND hwnd, int width, int height) {
 }
 
 void DashboardDraw(HDC hdc) {
-    // Rien à dessiner pour l'instant
+    (void)hdc;
+}
+
+void DashboardStatsRefresh(void) {
+    StatsPanelRefresh();
+}
+
+void DashboardStatsDraw(HDC hdc, int width, int height) {
+    if (!dashboardVisible) return;
+    StatsPanelDraw(hdc, width, height);
 }
 
 static void ApplyWindowed(HWND hwnd, int w, int h) {

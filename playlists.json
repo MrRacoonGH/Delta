@@ -1,4 +1,9 @@
 {
   "playlists": [
+    {
+      "name": "ma playlist",
+      "cover": "",
+      "tracks": []
+    }
   ]
 }

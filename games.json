@@ -4,84 +4,107 @@
       "name": "Metal Gear Solid PW",
       "path": "C:/Program Files (x86)/Steam/steamapps/common/MGS_PW/launcher/launcher.exe",
       "icon": "C:/Users/hadri/Desktop/Delta/icon/pw.ico",
-      "playtime": 0
+      "playtime": 0,
+      "lastplayed": 0
     },
     {
       "name": "Metal Gear Solid 4",
       "path": "C:/Program Files (x86)/Steam/steamapps/common/METAL GEAR SOLID 4/MGS4/mgs4.exe",
       "icon": "C:/Users/hadri/Desktop/Delta/icon/mgs4.ico",
-      "playtime": 0
+      "playtime": 0,
+      "lastplayed": 0
     },
     {
       "name": "Metal Gear Solid V",
       "path": "C:/Program Files (x86)/Steam/steamapps/common/MGS_TPP/mgsvtpp.exe",
       "icon": "C:/Users/hadri/Desktop/Delta/icon/mgsv.ico",
-      "playtime": 0
+      "playtime": 12312,
+      "lastplayed": 1788358529
     },
     {
-      "name": "JDM: Japanese Drift Master",
-      "path": "c:\\program files (x86)\\steam\\steamapps\\common\\JDM\\JDM.exe",
-      "playtime": 0
+      "name": "Grand Theft Auto V RP",
+      "path": "C:/Users/hadri/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/FiveM.lnk",
+      "icon": "C:/Users/hadri/Desktop/Delta/icon/GTAVRP.ico",
+      "playtime": 0,
+      "lastplayed": 0
     },
     {
       "name": "LEGO® Batman™ 2: DC Super Heroes",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\LEGO Batman 2\\LEGOBatman2.exe",
-      "playtime": 0
+      "playtime": 1384,
+      "lastplayed": 1781129941
     },
     {
       "name": "TowerFall Ascension",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\TowerFall\\TowerFall.exe",
-      "playtime": 0
+      "playtime": 1,
+      "lastplayed": 1776353431
     },
     {
       "name": "Kingsgrave",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Kingsgrave\\Kingsgrave.exe",
-      "playtime": 0
+      "playtime": 1177,
+      "lastplayed": 1787678482
     },
     {
       "name": "Grand Theft Auto V Legacy",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Grand Theft Auto V\\GTAVLauncher.exe",
-      "playtime": 0
+      "playtime": 34682,
+      "lastplayed": 1788552300
     },
     {
       "name": "Undertale",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Undertale\\UNDERTALE.exe",
-      "playtime": 0
+      "playtime": 116,
+      "lastplayed": 1755476473
     },
     {
       "name": "Resident Evil 2 (1998)",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\4249110_Biohazard2\\4249110_Launcher.exe",
-      "playtime": 0
+      "playtime": 115,
+      "lastplayed": 1785877500
     },
     {
       "name": "RPG Maker VX",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\RPG Maker VX\\RPGVX.exe",
-      "playtime": 0
+      "playtime": 71,
+      "lastplayed": 1762481293
     },
     {
       "name": "Fallout Shelter",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Fallout Shelter\\FalloutShelter.exe",
-      "playtime": 0
+      "playtime": 373,
+      "lastplayed": 1753643098
     },
     {
       "name": "Dead Cells",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Dead Cells\\deadcells.exe",
-      "playtime": 0
+      "playtime": 878,
+      "lastplayed": 1773612408
     },
     {
       "name": "PC Building Simulator",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\PC Building Simulator\\PCBS.exe",
-      "playtime": 0
+      "playtime": 1686,
+      "lastplayed": 1787697838
     },
     {
       "name": "Devil May Cry HD Collection",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Devil May Cry HD Collection\\dmcLauncher.exe",
-      "playtime": 0
+      "playtime": 2525,
+      "lastplayed": 1761603119
     },
     {
       "name": "Game Dev Studio",
       "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Game Dev Studio\\game_dev_studio.exe",
-      "playtime": 0
+      "playtime": 3680,
+      "lastplayed": 1782250274
+    },
+    {
+      "name": "Albion Online",
+      "path": "c:\\program files (x86)\\steam\\steamapps\\common\\Albion Online\\Albion-Online_BE.exe",
+      "playtime": 102,
+      "lastplayed": 1788403772
     }
   ]
 }

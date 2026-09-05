@@ -7,6 +7,7 @@
 #include <mfidl.h>
 #include <mfplay.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -23,6 +24,7 @@ static char trackArtists[MAX_MUSIC_TRACKS][MAX_ARTIST_LEN];
 static int trackCount = 0;
 static int currentTrack = -1;
 static int isPlaying = 0;
+static int playCounts[MAX_MUSIC_TRACKS];
 
 static IMFPMediaPlayer *g_player = NULL;
 static BOOL deviceOpen = FALSE;
@@ -96,6 +98,111 @@ static void ParseTrackName(const char *filename, char *title, char *artist) {
         title[MAX_TITLE_LEN - 1] = '\0';
         strcpy(artist, "Artiste inconnu");
     }
+}
+
+static void GetAppDir2(char *out, int outSize) {
+    GetModuleFileName(NULL, out, outSize);
+    char *slash = strrchr(out, '\\');
+    if (slash) slash[1] = '\0'; else strcat(out, "\\");
+}
+
+static void SaveMusicCounts(void) {
+    char dir[520];
+    GetAppDir2(dir, sizeof(dir));
+    char path[540];
+    snprintf(path, sizeof(path), "%smusic_stats.json", dir);
+
+    FILE *f = fopen(path, "w");
+    if (!f) return;
+    fprintf(f, "{\n  \"tracks\": [\n");
+    int first = 1;
+    for (int i = 0; i < trackCount; i++) {
+        if (playCounts[i] <= 0) continue;
+        char esc[512];
+        {
+            size_t o = 0;
+            const char *in = trackTitles[i];
+            for (; *in && o < sizeof(esc) - 2; in++) {
+                char c = *in;
+                if (c == '\\' || c == '"') esc[o++] = '\\';
+                esc[o++] = c;
+            }
+            esc[o] = '\0';
+        }
+        if (!first) fprintf(f, ",\n");
+        fprintf(f, "    { \"title\": \"%s\", \"count\": %d }", esc, playCounts[i]);
+        first = 0;
+    }
+    fprintf(f, "\n  ]\n}\n");
+    fclose(f);
+}
+
+static void LoadMusicCounts(void) {
+    char dir[520];
+    GetAppDir2(dir, sizeof(dir));
+    char path[540];
+    snprintf(path, sizeof(path), "%smusic_stats.json", dir);
+
+    FILE *f = fopen(path, "r");
+    if (!f) return;
+
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (fsize <= 0) { fclose(f); return; }
+
+    char *buffer = (char*)malloc((size_t)fsize + 1);
+    if (!buffer) { fclose(f); return; }
+    size_t read = fread(buffer, 1, (size_t)fsize, f);
+    buffer[read] = '\0';
+    fclose(f);
+
+    char *ptr = buffer;
+    while ((ptr = strstr(ptr, "\"title\"")) != NULL) {
+        char *open = strchr(ptr, '"');
+        if (!open) break;
+        open = strchr(open + 1, '"');
+        if (!open) break;
+        char *close = strchr(open + 1, '"');
+        if (!close) break;
+
+        size_t len = (size_t)(close - open - 1);
+        char title[512];
+        if (len >= sizeof(title)) len = sizeof(title) - 1;
+        memcpy(title, open + 1, len);
+        title[len] = '\0';
+
+        char unesc[512];
+        {
+            size_t o = 0;
+            for (size_t k = 0; title[k]; k++) {
+                if (title[k] == '\\' && (title[k + 1] == '\\' || title[k + 1] == '"')) {
+                    unesc[o++] = title[k + 1];
+                    k++;
+                } else {
+                    unesc[o++] = title[k];
+                }
+            }
+            unesc[o] = '\0';
+        }
+
+        char *countStart = strstr(close, "\"count\"");
+        int val = 0;
+        if (countStart) {
+            char *cv = strchr(countStart, ':');
+            if (cv) val = atoi(cv + 1);
+        }
+
+        for (int i = 0; i < trackCount; i++) {
+            if (strcmp(trackTitles[i], unesc) == 0 && playCounts[i] < val) {
+                playCounts[i] = val;
+                break;
+            }
+        }
+        ptr = close + 1;
+    }
+
+    free(buffer);
 }
 
 static void ScanMusicFolder(void) {
@@ -215,9 +322,13 @@ static DWORD GetMCIPositionMs(void) {
     return 0;
 }
 
+static void SaveMusicCounts(void);
+static void LoadMusicCounts(void);
+
 static void PlayTrack(int index) {
     if (index < 0 || index >= trackCount) return;
     currentTrack = index;
+    playCounts[index]++;
 
     CloseMCIDevice();
 
@@ -289,6 +400,7 @@ void MusicPlayerInit(HWND hwnd) {
     LogMsg("[INIT] MusicPlayerInit called");
 
     ScanMusicFolder();
+    LoadMusicCounts();
 
     RECT rc;
     GetClientRect(hwnd, &rc);
@@ -413,9 +525,14 @@ void MusicPlayerOnNotify(HWND hwnd, WPARAM wParam, LPARAM lParam) {
 }
 
 void MusicPlayerShutdown(void) {
+    SaveMusicCounts();
     CloseMCIDevice();
     KillTimer(hwndParent, TIMER_MUSIC_POS);
     MFShutdown();
+}
+
+void MusicPlayerSaveCounts(void) {
+    SaveMusicCounts();
 }
 
 int MusicPlayerGetTrackCount(void) { return trackCount; }
@@ -441,4 +558,9 @@ void MusicPlayerPlayTrack(int index) {
 const char *MusicPlayerGetTrackPath(int index) {
     if (index >= 0 && index < trackCount) return trackPaths[index];
     return NULL;
+}
+
+int MusicPlayerGetPlayCount(int index) {
+    if (index >= 0 && index < trackCount) return playCounts[index];
+    return 0;
 }
